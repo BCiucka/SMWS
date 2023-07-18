@@ -104,7 +104,7 @@ const MoreScreen = () => {
     getMedicine();
     alert('Lek został dodany pomyślnie!');
 
-    // Wyczyść pola po dodaniu leku
+    // Wyczyść pola po dodaniu leku// juz działa
     setNewMedicineName('');
     setNewMedicineAmount('');
   };
@@ -115,7 +115,7 @@ const MoreScreen = () => {
     await deleteDoc(docRef);
     
 
-    // Odśwież listę po usunięciu
+    // Odśwież listę po usunięciu// juz działa
     getMedicine();
   };
 
@@ -127,7 +127,7 @@ const MoreScreen = () => {
       amount: newAmount,
     });
 
-    // Odśwież listę po edycji
+    // Odśwież listę po edycji// juz działa
     getMedicine();
   };
 
@@ -137,7 +137,7 @@ const MoreScreen = () => {
 
       const medicines = medicineSnap.docs.map(doc => {
         let data = doc.data();
-        data.id = doc.id; // Musimy dołączyć ID do późniejszego usunięcia lub edycji
+        data.id = doc.id; //dołączyć ID do późniejszego usunięcia lub edycji// juz działa
         return data;
       });
 
@@ -154,9 +154,9 @@ const MoreScreen = () => {
 
       const entries = entriesSnap.docs.map(doc => {
         let data = doc.data();
-        // Jeśli 'date' istnieje i jest obiektem Firestore Timestamp
-        if (data.date && data.date instanceof Timestamp) { // Używamy zaimportowanego Timestamp
-          data.date = data.date.toDate(); // Konwertujemy na obiekt JavaScript Date
+        // Jeśli 'date' istnieje i jest obiektem Firestore Timestamp// juz działa
+        if (data.date && data.date instanceof Timestamp) { //
+          data.date = data.date.toDate(); // Konwertuj na  Date// juz działa
         }
         return data;
       });
@@ -168,10 +168,10 @@ const MoreScreen = () => {
   };
 
   const exportData = async () => {
-    // Tworzenie nagłówka CSV z nazwami kolumn
+    // Tworzenie nagłówka CSV z nazwami kolumn// juz działa
     const csvContent = 'Aktywność,Węglowodany,Data,Ciśnienie rozkurczowe,Poziom glukozy,Insulina,Ciśnienie skurczowe,Czas,Pora dnia,Waga\n';
 
-    // Dodawanie danych do CSV
+    // Dodawanie danych do CSV// juz działa
     const csvData = entriesData.map(entry =>
       `${entry.activity},${entry.carbohydrates},${entry.date},${entry.diastolicPressure},${entry.glucoseLevel},${entry.insulin},${entry.systolicPressure},${entry.time},${entry.timeOfDay},${entry.weight}`
     ).join('\n');
@@ -186,7 +186,7 @@ const MoreScreen = () => {
       alert('Nie udało się wyeksportować danych do pliku CSV');
       console.log(error);
     }
-  };
+  };// juz działa
 
   return (
     <ScrollView style={styles.container}>

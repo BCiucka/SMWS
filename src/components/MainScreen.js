@@ -213,7 +213,7 @@ const MainScreen = () => {
       setMonthlyStats(monthlyStats);
     };
 
-    // Call once initially
+    // // juz działa
     fetchAndSetDailyStats();
     fetchAndSetWeeklyStats();
     fetchAndSetMonthlyStats();
@@ -227,7 +227,7 @@ const MainScreen = () => {
     const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
     const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 1);
 
-    // Set up snapshot listener for daily entries
+    //
     const dailyEntriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfDay),
@@ -238,7 +238,7 @@ const MainScreen = () => {
       fetchAndSetDailyStats();
     });
 
-    // Set up snapshot listener for weekly entries
+    // 
     const weeklyEntriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfWeek),
@@ -249,7 +249,7 @@ const MainScreen = () => {
       fetchAndSetWeeklyStats();
     });
 
-    // Set up snapshot listener for monthly entries
+    //// juz działa
     const monthlyEntriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfMonth),
@@ -274,7 +274,7 @@ const MainScreen = () => {
     };
   }, []);
 
-
+// juz działa
 
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerValue, setTimerValue] = useState('60');
@@ -293,7 +293,7 @@ const MainScreen = () => {
       );
     }
   };
-
+// juz działa
 
 
   const startTimer = () => {
@@ -377,7 +377,7 @@ const MainScreen = () => {
     }
   };
 
-
+// juz działa ale sa tylko szerokos i długosc
 
   const handleStatisticsPress = () => {
     Animated.timing(showStatistics, {
@@ -398,7 +398,7 @@ const MainScreen = () => {
 
 
   const handleScroll = (event) => {
-    if (event.nativeEvent.contentOffset.y < -28) { // Zmienić na pożądaną wartość
+    if (event.nativeEvent.contentOffset.y < -28) { // Zmienić na  wartość 28
       handleStatisticsPress();
     }
   };
@@ -554,7 +554,7 @@ const MainScreen = () => {
 
         }}
       >
-        {/* Calories and Carbohydrates */}
+        {/* Statystystki*/}
         <View style={styles.bottomContainer}>
           <ScrollView
             scrollEventThrottle={16}

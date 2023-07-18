@@ -16,7 +16,7 @@ const transition = (
     <Transition.Out type="fade" durationMs={200} />
   </Transition.Together>
 );
-
+//pomyslec na zmiana na drawwer bo przez bootom navigation nestowanie nie działa
 const BottomNavBar = () => {
   const [index, setIndex] = React.useState(0);
   const [routes] = React.useState([
@@ -34,7 +34,7 @@ const BottomNavBar = () => {
     Graphs: GraphsScreen,
     More: MoreScreen,
   });
-
+// juz działa
   const ref = React.useRef();
 
   const { colors } = useTheme();

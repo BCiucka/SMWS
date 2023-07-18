@@ -5,7 +5,7 @@ import { collection, onSnapshot } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 
 const screenWidth = Dimensions.get("window").width;
-
+//kolory wykresów
 const chartConfig = {
   backgroundGradientFrom: "#fff",
   backgroundGradientTo: "#fff",
@@ -19,7 +19,7 @@ const chartConfig = {
   decimalPlaces: 0,
 };
 
-
+//w bazie jest timestamp->na date
 const formatDate = (date) => {
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -50,7 +50,7 @@ const GraphScreen = () => {
       </View>
     ));
   };
-
+//kolory glukozy zalezne od poziomu
   const getLegendLabel = (index) => {
     switch (index) {
       case 0:
@@ -101,7 +101,7 @@ const GraphScreen = () => {
           datasets: [{ data: localNewData.map((item) => item.glucoseLevel) }],
         });
 
-        // Group entries by date and sum insulin doses
+        // grupowanie wartosci razem z data
         let insulinData = localNewData.reduce((acc, current) => {
           let formattedDate = formatDate(current.date);
           if (!acc[formattedDate]) {
@@ -123,7 +123,7 @@ const GraphScreen = () => {
         });
         
 
-        // Calculate percentages
+        // procenty
         let lowCount = 0;
         let normalCount = 0;
         let highCount = 0;
@@ -189,7 +189,7 @@ const GraphScreen = () => {
         </View>
         <LineChart
           data={data}
-          width={screenWidth - 70} // Subtract margins
+          width={screenWidth - 70} 
           height={220}
           chartConfig={chartConfig}
           bezier
@@ -212,7 +212,7 @@ const GraphScreen = () => {
           backgroundColor={"transparent"}
           paddingLeft={"15"}
           absolute
-          hasLegend={true} // disable built-in legend
+          hasLegend={true} 
         />
         {getPieChartLegend()}
       </View>
@@ -222,7 +222,7 @@ const GraphScreen = () => {
         </View>
         <BarChart
           data={barData}
-          width={screenWidth - 70} // Subtract margins
+          width={screenWidth - 70} //marginesy
           height={220}
           chartConfig={chartConfig}
           fromZero={true}
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
     marginBottom: 10,
-    textAlign: 'center',  // dodane wyśrodkowanie
+    textAlign: 'center', 
   },
   alertContainer: {
     marginTop: 10,
@@ -271,11 +271,11 @@ const styles = StyleSheet.create({
   },
   alertText: {
     color: '#fff',
-    textAlign: 'center',  // dodane wyśrodkowanie
+    textAlign: 'center',  
   },
   TitleText: {
     color: '#fff',
-    textAlign: 'center',  // dodane wyśrodkowanie
+    textAlign: 'center',  
     fontSize: 18,
     fontWeight: 'bold',
   },

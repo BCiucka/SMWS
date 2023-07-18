@@ -1,10 +1,23 @@
 {
   "expo": {
     "scheme": "acme",
+    "icon": "./assets/logo.jpg",
+    "version": "1.0.0",
     "web": {
       "bundler": "metro"
     },
-    "name": "Inzynier",
-    "slug": "Inzynier"
+    "name": "GlucoMate",
+    "slug": "GlucoMate",
+    "extra": {
+      "eas": {
+        "projectId": "bbf19240-25c5-4bc6-be5b-b1ca3eaf31de"
+      }
+    },
+    "android": {
+      "package": "com.avissan.GlucoMate"
+    }
+  },
+  "android": {
+    "package": "BartoszCiucka.GlucoMate"
   }
 }

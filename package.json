@@ -29,7 +29,6 @@
     "expo-location": "^15.1.1",
     "expo-notifications": "^0.18.1",
     "expo-permissions": "~14.1.1",
-    "expo-print": "^12.4.2",
     "expo-router": "^1.2.0",
     "expo-sharing": "~11.2.2",
     "expo-splash-screen": "~0.18.1",

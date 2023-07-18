@@ -37,6 +37,7 @@ const DataEntryScreen = () => {
     const minutes = now.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   }
+  //czasami sa błedy a czasmi działa
   const getTimeOfDay = (hour) => {
     if (hour >= 5 && hour < 8) {
       return 'Przed Śniadaniem';
@@ -64,7 +65,7 @@ const DataEntryScreen = () => {
     
     return () => clearInterval(intervalId);
   }, []);
-
+// juz działa
   useEffect(() => {
     updateTimeOfDay();
   }, [date]);
@@ -126,7 +127,7 @@ const DataEntryScreen = () => {
     setDiastolicPressure('');
     setActivity('');
   };
-  
+  // juz działa
   const handleRESET = () => {
 
 
@@ -409,7 +410,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   headerText: {
-    color: 'white', // Kolor biały
+    color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -550,9 +551,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: '#8F8F8F'
   },
-
-
-
   doneButton: {
     position: 'absolute',
     top: -1,

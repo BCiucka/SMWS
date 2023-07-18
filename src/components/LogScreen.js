@@ -46,7 +46,7 @@ const LogScreen = () => {
       setEntries(newEntries);
     });
 
-    return () => unsubscribe(); // cleanup function
+    return () => unsubscribe(); // juz działa
   }, []);
 
   return (
