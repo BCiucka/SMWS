@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Alert, Linking, ScrollView,Button} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Alert, Linking, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { requestForegroundPermissionsAsync, getCurrentPositionAsync } from 'expo-location';
-import * as Notifications from 'expo-notifications';
-import { getFirestore, onSnapshot, collection, query, orderBy, limit, where, Timestamp,getDocs } from "firebase/firestore";
+import { getFirestore, onSnapshot, collection, query, orderBy, limit, where, getDocs,doc } from "firebase/firestore";
 import { initializeApp } from 'firebase/app';
 
 
@@ -13,16 +12,21 @@ const MainScreen = () => {
   const [circle0Scale] = useState(new Animated.Value(0));
   const [circle1Scale] = useState(new Animated.Value(0));
   const [circle2Scale] = useState(new Animated.Value(0));
-  const [notificationActive, setNotificationActive] = useState(false);
+  const [emergencyContact, setEmergencyContact] = useState('');
   const [lastDate, setLastDate] = useState(null);
   const [lastGlucose, setLastGlucose] = useState(null);
-  const [lastCarb,setLastCarb]= useState(null);
+  const [lastCarb, setLastCarb] = useState(null);
   const [lastInsulin, setLastInsulin] = useState(null);
-  const [dailyStats, setDailyStats] = useState({calories: 0, carbs: 0, insulin: 0, glucose: 0, wieght: 0});
-  const [weeklyStats, setWeeklyStats] = useState({calories: 0, carbs: 0, insulin: 0, glucose: 0, wieght: 0});
-  const [monthlyStats, setMonthlyStats] = useState({calories: 0, carbs: 0, insulin: 0, glucose: 0, wieght: 0});
+  const [dailyStats, setDailyStats] = useState({ calories: 0, carbs: 0, insulin: 0, glucose: 0, wieght: 0 });
+  const [weeklyStats, setWeeklyStats] = useState({ calories: 0, carbs: 0, insulin: 0, glucose: 0, wieght: 0 });
+  const [monthlyStats, setMonthlyStats] = useState({ calories: 0, carbs: 0, insulin: 0, glucose: 0, wieght: 0 });
   const [a1c, setA1c] = useState(null);
   const [isLantusPressed, setIsLantusPressed] = useState(false);
+  function roundToFixed(number, decimalPlaces) {
+    const factor = 10 ** decimalPlaces;
+    return (Math.round(number * factor) / factor).toFixed(decimalPlaces);
+  }
+
   const firebaseConfig = {
     apiKey: "AIzaSyCYiVYps34JN6oS3l93_JQWjCuAMXiG-48",
     authDomain: "inzynierka-90015.firebaseapp.com",
@@ -34,6 +38,7 @@ const MainScreen = () => {
   };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  
   useEffect(() => {
     const calculateA1c = async () => {
       const a1cQuery = query(
@@ -45,13 +50,13 @@ const MainScreen = () => {
       const unsubscribeA1c = onSnapshot(a1cQuery, (snapshot) => {
         const glucoseLevels = [];
         snapshot.forEach((doc) => {
-          glucoseLevels.push(parseFloat(doc.data().glucoseLevel)); 
+          glucoseLevels.push(parseFloat(doc.data().glucoseLevel));
         });
 
         const sum = glucoseLevels.reduce((a, b) => a + b, 0);
         const avgGlucose = sum / glucoseLevels.length;
-        const a1c = (avgGlucose + 46.7) / 28.7; 
-        setA1c(a1c.toFixed(1)); 
+        const a1c = (avgGlucose + 46.7) / 28.7;
+        setA1c(a1c.toFixed(1));
       });
 
       return () => unsubscribeA1c();
@@ -73,12 +78,12 @@ const MainScreen = () => {
         });
       });
       const lastEntry = entries[0];
-if (lastEntry) {
-  setLastDate(lastEntry.date);
-  setLastGlucose(lastEntry.glucoseLevel);
-  setLastInsulin(lastEntry.insulin);
-  setLastCarb(lastEntry.carbohydrates);
-}
+      if (lastEntry) {
+        setLastDate(lastEntry.date);
+        setLastGlucose(lastEntry.glucoseLevel);
+        setLastInsulin(lastEntry.insulin);
+        setLastCarb(lastEntry.carbohydrates);
+      }
 
     });
 
@@ -87,13 +92,13 @@ if (lastEntry) {
   const getGlucoseLevelColor = (glucoseLevel) => {
     let color = 'white'; // domyślny kolors
 
-    
+
     if (glucoseLevel < 70) {
       color = '#B9Bfff'; // niski poziom
     } else if (glucoseLevel >= 70 && glucoseLevel <= 180) {
       color = '#67ba6a'; // normalny poziom
     } else if (glucoseLevel > 180) {
-      color = '#922B3E'; // wysoki poziom
+      color = '#f7a446'; // wysoki poziom
     }
 
     return color;
@@ -101,59 +106,59 @@ if (lastEntry) {
   const getEntriesForDate = async (date) => {
     const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
     const endOfDay = new Date(startOfDay.getTime() + (24 * 60 * 60 * 1000));
-  
+
     const entriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfDay),
       where('date', '<', endOfDay)
     );
-  
+
     const querySnapshot = await getDocs(entriesQuery);
-  
+
     const entries = [];
     querySnapshot.forEach((doc) => {
       entries.push(doc.data());
     });
-  
+
     return entries;
   };
   const getEntriesForWeek = async (date) => {
     const startOfWeek = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay());
     const endOfWeek = new Date(startOfWeek.getTime() + (7 * 24 * 60 * 60 * 1000));
-  
+
     const entriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfWeek),
       where('date', '<', endOfWeek)
     );
-  
+
     const querySnapshot = await getDocs(entriesQuery);
-  
+
     const entries = [];
     querySnapshot.forEach((doc) => {
       entries.push(doc.data());
     });
-  
+
     return entries;
   };
-  
+
   const getEntriesForMonth = async (date) => {
     const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
     const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 1);
-  
+
     const entriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfMonth),
       where('date', '<', endOfMonth)
     );
-  
+
     const querySnapshot = await getDocs(entriesQuery);
-  
+
     const entries = [];
     querySnapshot.forEach((doc) => {
       entries.push(doc.data());
     });
-  
+
     return entries;
   };
   const sumDailyStats = (entries) => {
@@ -162,8 +167,8 @@ if (lastEntry) {
     let sumInsulin = 0;
     let sumGlucose = 0;
     let sumWeight = 0;
-    let sumActivity=0;
-  
+    let sumActivity = 0;
+
     entries.forEach((entry) => {
       const carbs = parseFloat(entry.carbohydrates) || 0;
       sumCalories += carbs * 4;
@@ -171,19 +176,19 @@ if (lastEntry) {
       sumInsulin += parseFloat(entry.insulin) || 0;
       sumGlucose += parseFloat(entry.glucoseLevel) || 0;
       sumWeight += parseFloat(entry.wieght) || 0;
-      sumActivity+= parseFloat(entry.activity) || 0;
+      sumActivity += parseFloat(entry.activity) || 0;
     });
-  
+
     const avgGlucose = entries.length > 0 ? sumGlucose / entries.length : 0;
     const avgWeight = entries.length > 0 ? sumWeight / entries.length : 0;
-  
+
     return {
       calories: sumCalories,
       carbohydrates: sumCarbs,
       insulin: sumInsulin,
       glucoseLevel: avgGlucose,
       wieght: avgWeight,
-      activity:sumActivity,
+      activity: sumActivity,
     };
   };
   useEffect(() => {
@@ -193,73 +198,73 @@ if (lastEntry) {
       const dailyStats = sumDailyStats(dailyEntries);
       setDailyStats(dailyStats);
     };
-  
+
     const fetchAndSetWeeklyStats = async () => {
       const today = new Date();
       const weeklyEntries = await getEntriesForWeek(today);
       const weeklyStats = sumDailyStats(weeklyEntries);
       setWeeklyStats(weeklyStats);
     };
-  
+
     const fetchAndSetMonthlyStats = async () => {
       const today = new Date();
       const monthlyEntries = await getEntriesForMonth(today);
       const monthlyStats = sumDailyStats(monthlyEntries);
       setMonthlyStats(monthlyStats);
     };
-  
+
     // Call once initially
     fetchAndSetDailyStats();
     fetchAndSetWeeklyStats();
     fetchAndSetMonthlyStats();
-  
+
     const startOfDay = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
     const endOfDay = new Date(startOfDay.getTime() + (24 * 60 * 60 * 1000));
-  
+
     const startOfWeek = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), startOfDay.getDate() - startOfDay.getDay());
     const endOfWeek = new Date(startOfWeek.getTime() + (7 * 24 * 60 * 60 * 1000));
-  
+
     const startOfMonth = new Date(startOfDay.getFullYear(), startOfDay.getMonth(), 1);
     const endOfMonth = new Date(startOfMonth.getFullYear(), startOfMonth.getMonth() + 1, 1);
-  
+
     // Set up snapshot listener for daily entries
     const dailyEntriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfDay),
       where('date', '<', endOfDay)
     );
-  
+
     const unsubscribeDaily = onSnapshot(dailyEntriesQuery, () => {
       fetchAndSetDailyStats();
     });
-  
+
     // Set up snapshot listener for weekly entries
     const weeklyEntriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfWeek),
       where('date', '<', endOfWeek)
     );
-  
+
     const unsubscribeWeekly = onSnapshot(weeklyEntriesQuery, () => {
       fetchAndSetWeeklyStats();
     });
-  
+
     // Set up snapshot listener for monthly entries
     const monthlyEntriesQuery = query(
       collection(db, 'entries'),
       where('date', '>=', startOfMonth),
       where('date', '<', endOfMonth)
     );
-  
+
     const unsubscribeMonthly = onSnapshot(monthlyEntriesQuery, () => {
       fetchAndSetMonthlyStats();
     });
-  
+
     // Ustal timer, który wywoła funkcję ponownie o północy.
     const now = new Date();
     const tillMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
     const timerId = setTimeout(fetchAndSetDailyStats, tillMidnight);
-  
+
     // Kiedy komponent jest odmontowywany, anuluj timer.
     return () => {
       clearTimeout(timerId);
@@ -268,56 +273,28 @@ if (lastEntry) {
       unsubscribeMonthly();
     };
   }, []);
-  
-  
+
+
 
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [timerValue, setTimerValue] = useState('60');
 
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-    }),
-  });
-  const scheduleReminder = async () => {
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Przypmnienie',
-          body: 'Pamiętaj o podaniu LANTUSA',
-        },
-        trigger: {
-          seconds: 24 * 60 * 60, 
-        },
-      });
-      console.log('Reminder scheduled successfully');
-      setNotificationActive(true); // Ustawienie stanu na true po ustawieniu powiadomienia
-    } catch (error) {
-      console.log('Error scheduling reminder:', error);
+  const handleLantusPress = () => {
+    setIsLantusPressed(!isLantusPressed);
+    if (!isLantusPressed) { // Sprawdzenie, czy przycisk jest naciśnięty
+      Alert.alert(
+        "Potwierdzenie",
+        "Dawka insuliny została przyjęta",
+        [
+          { text: 'Anuluj', style: 'cancel' },
+          { text: "OK", onPress: () => console.log("OK Pressed") },
+        ],
+        { cancelable: false }
+      );
     }
   };
-  useEffect(() => {
-    const checkNotificationStatus = async () => {
-      const { status } = await Notifications.getPermissionsAsync();
-      setNotificationActive(status === 'granted');
-    };
-
-    checkNotificationStatus();
-  }, []);
 
 
-  useEffect(() => {
-    const getNotificationPermissions = async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('Notification permission not granted');
-      }
-    };
-
-    getNotificationPermissions();
-  }, []);
 
   const startTimer = () => {
     setIsTimerRunning(true);
@@ -362,8 +339,24 @@ if (lastEntry) {
       startTimer();
     }
   };
+  const docRef = doc(db, "personal_information", "unique_user_id");
+  useEffect(() => {
+    const unsubscribe = onSnapshot(docRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+
+        setEmergencyContact(data.emergencyContact);
+
+      } else {
+        console.log("No such document!");
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+  
   const openMessageApp = async () => {
-    const phoneNumber = '1234567890'; 
+    const phoneNumber = emergencyContact;
 
     let { status } = await requestForegroundPermissionsAsync();
 
@@ -385,28 +378,25 @@ if (lastEntry) {
   };
 
 
-  const handleLantusPress = () => {
-    setIsLantusPressed(!isLantusPressed);
-  };
 
   const handleStatisticsPress = () => {
     Animated.timing(showStatistics, {
-      toValue: showStatisticsValue === 0 ? 1 : 0, 
+      toValue: showStatisticsValue === 0 ? 1 : 0,
       duration: 500,
       useNativeDriver: false,
     }).start();
-  
-   
+
+
     setShowStatisticsValue(showStatisticsValue === 0 ? 1 : 0);
   };
-  
+
   const statisticsHeight = showStatistics.interpolate({
     inputRange: [0, 1],
     outputRange: ['1%', '85%'],
   });
- 
- 
- 
+
+
+
   const handleScroll = (event) => {
     if (event.nativeEvent.contentOffset.y < -28) { // Zmienić na pożądaną wartość
       handleStatisticsPress();
@@ -441,8 +431,8 @@ if (lastEntry) {
   return (
     <View style={{ flex: 1, backgroundColor: '#f2f2f2' }}>
 
-     
- 
+
+
 
       {/* Treść ekranu */}
       <View style={{ flex: 1 }}>
@@ -460,7 +450,7 @@ if (lastEntry) {
               style={[
                 styles.circle0,
                 { transform: [{ scale: circle0Scale }] },
-                { backgroundColor: getGlucoseLevelColor(lastGlucose) }, 
+                { backgroundColor: getGlucoseLevelColor(lastGlucose) },
               ]}
             >
               <Text style={styles.circleText}>{lastGlucose || '-'}</Text>
@@ -506,18 +496,17 @@ if (lastEntry) {
 
         {/* Container 2 */}
         <View style={styles.container2}>
-           {/* Przycisk STATYSTYKI */}
-           
+
           {/* Ikony */}
           <TouchableOpacity
-            onPress={scheduleReminder && handleLantusPress}
+            onPress={handleLantusPress}
             style={[
               styles.iconButton,
-              notificationActive && isLantusPressed && styles.iconButtonActive,
+              isLantusPressed && styles.iconButtonActive,
             ]}
           >
             <Ionicons name="notifications-sharp" size={36} color={isLantusPressed ? '#e8e8e8' : '#25a3c2'} />
-            <Text style={[styles.iconLabel, notificationActive && isLantusPressed && styles.iconLabelActive,]}>LANTUS</Text>
+            <Text style={[styles.iconLabel, isLantusPressed && styles.iconLabelActive]}>LANTUS</Text>
           </TouchableOpacity>
 
 
@@ -540,139 +529,139 @@ if (lastEntry) {
 
         </View>
         <TouchableOpacity
-    style={styles.statisticsButton1}
-    onPress={handleStatisticsPress}
-  >
-    <Text style={styles.statisticsButtonText}>
-      {showStatisticsValue ? 'ZWIŃ' : 'STATYSTYKI'}
-    </Text>
-  </TouchableOpacity>
+          style={styles.statisticsButton1}
+          onPress={handleStatisticsPress}
+        >
+          <Text style={styles.statisticsButtonText}>
+            {showStatisticsValue ? 'ZWIŃ' : 'STATYSTYKI'}
+          </Text>
+        </TouchableOpacity>
 
-       
+
       </View>
 
       <Animated.View
-  style={{
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: statisticsHeight,
-    backgroundColor: 'white',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    padding:1,
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: statisticsHeight,
+          backgroundColor: 'white',
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          padding: 1,
 
-  }}
->
- {/* Calories and Carbohydrates */}
- <View style={styles.bottomContainer}>
-  <ScrollView
-    scrollEventThrottle={16} 
-    onScroll={handleScroll}
-  >
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>DZISAJ</Text>
-      
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Kalorie:</Text>
-        <Text style={styles.metric}>{dailyStats.calories} kcal </Text>
-      </View>
+        }}
+      >
+        {/* Calories and Carbohydrates */}
+        <View style={styles.bottomContainer}>
+          <ScrollView
+            scrollEventThrottle={16}
+            onScroll={handleScroll}
+          >
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>DZISAJ</Text>
 
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Węglowodany:</Text>
-        <Text style={styles.metric}>{dailyStats.carbohydrates} g </Text>
-      </View>
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Kalorie:</Text>
+                <Text style={styles.metric}>{dailyStats.calories} kcal </Text>
+              </View>
 
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Insulina:</Text>
-        <Text style={styles.metric}>{dailyStats.insulin} U </Text>
-      </View>
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Węglowodany:</Text>
+                <Text style={styles.metric}>{dailyStats.carbohydrates} g </Text>
+              </View>
 
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Średni poziom glukozy:</Text>
-        <Text style={styles.metric}>{dailyStats.glucoseLevel} mg/dL </Text>
-      </View>
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Insulina:</Text>
+                <Text style={styles.metric}>{dailyStats.insulin} U </Text>
+              </View>
 
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Średnia masa ciała :</Text>
-        <Text style={styles.metric}>{dailyStats.wieght} kg</Text>
-      </View>
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Aktywność:</Text>
-        <Text style={styles.metric}>{dailyStats.activity} minut</Text>
-      </View>
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Średni poziom glukozy:</Text>
+                <Text style={styles.metric}>{roundToFixed(dailyStats.glucoseLevel, 2)} mg/dL </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Średnia masa ciała :</Text>
+                <Text style={styles.metric}>{roundToFixed(dailyStats.wieght, 2)} kg</Text>
+              </View>
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Aktywność:</Text>
+                <Text style={styles.metric}>{dailyStats.activity} minut</Text>
+              </View>
+            </View>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>W TYM TYGODNIU</Text>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Kalorie:</Text>
+                <Text style={styles.metric}>{weeklyStats.calories} kcal </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Węglowodany:</Text>
+                <Text style={styles.metric}>{weeklyStats.carbohydrates} g </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Insulina:</Text>
+                <Text style={styles.metric}>{weeklyStats.insulin} U </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Średni poziom glukozy:</Text>
+                <Text style={styles.metric}>{roundToFixed(weeklyStats.glucoseLevel, 2)} mg/dL </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Średnia masa ciała :</Text>
+                <Text style={styles.metric}>{roundToFixed(weeklyStats.wieght, 2)} kg</Text>
+              </View>
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Aktywność:</Text>
+                <Text style={styles.metric}>{weeklyStats.activity} minut</Text>
+              </View>
+            </View>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>W TYM MIESIĄCU</Text>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Kalorie:</Text>
+                <Text style={styles.metric}>{monthlyStats.calories} kcal </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Węglowodany:</Text>
+                <Text style={styles.metric}>{monthlyStats.carbohydrates} g </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Insulina:</Text>
+                <Text style={styles.metric}>{monthlyStats.insulin} U </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Średni poziom glukozy:</Text>
+                <Text style={styles.metric}>{roundToFixed(monthlyStats.glucoseLevel, 2)} mg/dL </Text>
+              </View>
+
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Średnia masa ciała :</Text>
+                <Text style={styles.metric}>{roundToFixed(monthlyStats.wieght, 2)} kg</Text>
+              </View>
+              <View style={styles.entry}>
+                <Text style={styles.entryText}>Aktywność:</Text>
+                <Text style={styles.metric}>{monthlyStats.activity} minut</Text>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+
+
+      </Animated.View>
     </View>
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>W TYM TYGODNIU</Text>
-      
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Kalorie:</Text>
-        <Text style={styles.metric}>{weeklyStats.calories} kcal </Text>
-      </View>
-
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Węglowodany:</Text>
-        <Text style={styles.metric}>{weeklyStats.carbohydrates} g </Text>
-      </View>
-
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Insulina:</Text>
-        <Text style={styles.metric}>{weeklyStats.insulin} U </Text>
-      </View>
-
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Średni poziom glukozy:</Text>
-        <Text style={styles.metric}>{weeklyStats.glucoseLevel} mg/dL </Text>
-      </View>
-
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Średnia masa ciała :</Text>
-        <Text style={styles.metric}>{weeklyStats.wieght} kg</Text>
-      </View>
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Aktywność:</Text>
-        <Text style={styles.metric}>{weeklyStats.activity} minut</Text>
-      </View>
-    </View>
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>W TYM MIESIĄCU</Text>
-      
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Kalorie:</Text>
-        <Text style={styles.metric}>{monthlyStats.calories} kcal </Text>
-      </View>
-
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Węglowodany:</Text>
-        <Text style={styles.metric}>{monthlyStats.carbohydrates} g </Text>
-      </View>
-
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Insulina:</Text>
-        <Text style={styles.metric}>{monthlyStats.insulin} U </Text>
-      </View>
-
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Średni poziom glukozy:</Text>
-        <Text style={styles.metric}>{monthlyStats.glucoseLevel} mg/dL </Text>
-      </View>
-
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Średnia masa ciała :</Text>
-        <Text style={styles.metric}>{monthlyStats.wieght} kg</Text>
-      </View>
-      <View style={styles.entry}>
-        <Text style={styles.entryText}>Aktywność:</Text>
-        <Text style={styles.metric}>{monthlyStats.activity} minut</Text>
-      </View>
-    </View>
-  </ScrollView>
-</View>
-
-  
-</Animated.View>
-</View>    
   );
 };
 
@@ -680,7 +669,7 @@ const styles = StyleSheet.create({
 
   container0: {
     flexDirection: 'row',
-    marginTop: 10, 
+    marginTop: 10,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
@@ -695,7 +684,7 @@ const styles = StyleSheet.create({
   container1: {
     flexDirection: 'row',
     marginTop: 5,
-    marginBottom:10, 
+    marginBottom: 10,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 30,
@@ -710,7 +699,7 @@ const styles = StyleSheet.create({
   container2: {
     flexDirection: 'row',
     marginTop: 10,
-    marginBottom:28, 
+    marginBottom: 28,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 30,
@@ -825,7 +814,7 @@ const styles = StyleSheet.create({
   bottomContainer: {
     flexGrow: 1,
     backgroundColor: '#f2f2f2',
-   // padding: 15,
+    // padding: 15,
 
     borderRadius: 10,
     shadowColor: '#000',

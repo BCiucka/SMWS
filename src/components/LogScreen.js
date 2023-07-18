@@ -19,9 +19,9 @@ const getGlucoseLevelColor = (glucoseLevel) => {
   } else if (glucoseLevel < 130) {
     return '#67ba6a';
   } else if (glucoseLevel < 180) {
-    return '#922B3E';
+    return '#f7a446';
   } else {
-    return '#922B3E';
+    return '#f7a446';
   }
 }
 const app = initializeApp(firebaseConfig);
